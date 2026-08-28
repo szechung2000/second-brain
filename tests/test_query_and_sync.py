@@ -56,7 +56,9 @@ def test_sync_only_allows_verified_atomic_memories_and_is_keyed(tmp_path):
     with pytest.raises(SyncRejected, match="verified"):
         sync_atomic_note(note, vault=tmp_path, actor="human", memory=memory)
 
-    note.write_text(note.read_text().replace("status: proposed", "status: verified"))
+    note.write_text(
+        note.read_text().replace("status: proposed", "status: verified\nprovenance: source")
+    )
     first = sync_atomic_note(note, vault=tmp_path, actor="human", memory=memory)
     second = sync_atomic_note(note, vault=tmp_path, actor="human", memory=memory)
     assert first.memory_id == second.memory_id == "memory-1"
@@ -66,3 +68,18 @@ def test_sync_only_allows_verified_atomic_memories_and_is_keyed(tmp_path):
     ]
     assert memory.writes[0][1]["namespace"] == "brain"
     assert memory.writes[0][1]["metadata"]["actor"] == "human"
+    assert memory.writes[0][1]["metadata"]["provenance"] == "source"
+
+
+@pytest.mark.parametrize("provenance", [None, "", "  ", "untraceable"])
+def test_sync_rejects_verified_atomic_memories_without_valid_provenance(tmp_path, provenance):
+    note = tmp_path / "Atomic" / "claim.md"
+    note.parent.mkdir()
+    provenance_line = "" if provenance is None else f"provenance: {provenance}\n"
+    note.write_text(
+        "---\ntype: atomic-memory\nstatus: verified\n"
+        f"{provenance_line}---\n\n# Claim\n\nUseful fact.\n"
+    )
+
+    with pytest.raises(SyncRejected, match="provenance"):
+        sync_atomic_note(note, vault=tmp_path, actor="human", memory=RecordingMemory())

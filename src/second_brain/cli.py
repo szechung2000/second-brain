@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             memory=AgentMemoryAdapter(args.memory_url),
         ).as_dict()
         return _emit(output, args.json)
-    except (FileNotFoundError, ValueError, OSError) as error:
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as error:
         return _emit({"error": str(error), "status": "error"}, args.json, failed=True)
 
 

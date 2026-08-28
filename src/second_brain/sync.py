@@ -13,6 +13,9 @@ class SyncRejected(ValueError):
     pass
 
 
+VALID_PROVENANCE = frozenset({"derived", "source", "user"})
+
+
 @dataclass(frozen=True)
 class SyncResult:
     memory_id: str
@@ -26,6 +29,9 @@ def sync_atomic_note(note: Path, *, vault: Path, actor: str, memory: MemoryAdapt
     metadata, body = read_frontmatter(note)
     if metadata.get("type") != "atomic-memory" or metadata.get("status") != "verified":
         raise SyncRejected("only type: atomic-memory notes with status: verified may enter brain")
+    provenance = metadata.get("provenance")
+    if provenance not in VALID_PROVENANCE:
+        raise SyncRejected("verified atomic-memory notes require valid provenance")
     relative = note.resolve().relative_to(vault.resolve()).as_posix()
     external_id = f"obsidian:{relative}"
     memory_id = memory.upsert(
@@ -38,7 +44,7 @@ def sync_atomic_note(note: Path, *, vault: Path, actor: str, memory: MemoryAdapt
             "metadata": {
                 "actor": actor,
                 "note_path": relative,
-                "provenance": metadata.get("provenance"),
+                "provenance": provenance,
             },
         },
     )

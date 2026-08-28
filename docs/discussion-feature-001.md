@@ -120,6 +120,13 @@ A separate verification worker must confirm:
 - The exact CI commands pass.
 - The demo can be run from a clean checkout with SQLite and no external LLM key.
 
+## Verification follow-up: atomic-note provenance
+
+Verified atomic memories must declare a non-empty provenance classification of
+`user`, `source`, or `derived` before they may enter `brain`. The synchronization
+adapter forwards that classification as index metadata. This makes promotion
+auditable without expanding the Feature 001 scope or changing its PRD.
+
 ## Worker outputs
 
 - Claude memo: architecture and smallest useful user experience
