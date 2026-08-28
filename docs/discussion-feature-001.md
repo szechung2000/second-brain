@@ -120,6 +120,13 @@ A separate verification worker must confirm:
 - The exact CI commands pass.
 - The demo can be run from a clean checkout with SQLite and no external LLM key.
 
+## Verification follow-up: atomic-note provenance
+
+Verified atomic memories must declare a non-empty provenance classification of
+`user`, `source`, or `derived` before they may enter `brain`. The synchronization
+adapter forwards that classification as index metadata. This makes promotion
+auditable without expanding the Feature 001 scope or changing its PRD.
+
 ## Worker outputs
 
 - Claude memo: architecture and smallest useful user experience
@@ -127,3 +134,15 @@ A separate verification worker must confirm:
 - AGY memo: worker boundaries, approval gates, and auditability
 - Final artifacts: `docs/prd-001-indexed-obsidian-second-brain.md`,
   `docs/adr-001-obsidian-canonical-agent-memory-derived.md`, and this log
+
+## Verification follow-up: final Claude review blockers
+
+The final review identified two missing verification paths. This fix cycle adds
+CLI-entrypoint coverage for successful `ingest`, `status`, repeated/default
+`query --scope`, and `sync-atomic`, each checking exit status and stable JSON.
+It also adds a real text-layer PDF integration test: `ingest_pdf` writes through
+the agent-memory FastAPI `TestClient` keyed `PUT` contract, then the real `sb
+query` path recalls cited `p. 1` evidence while file opens are forbidden. The
+agent-memory test environment now includes `pypdf` solely to support that
+cross-repository fixture. No product behavior or deferred Feature 001 scope was
+changed.
